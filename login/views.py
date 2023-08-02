@@ -1,8 +1,13 @@
 from django.urls import reverse
 from django.contrib.auth.views import LoginView
 from django.views.generic import TemplateView
-from django.urls import reverse_lazy
-from django.contrib.auth.views import LogoutView
+from django.contrib import messages
+
+class CustomLoginView(LoginView):
+    def form_invalid(self, form):
+        response = super().form_invalid(form)
+        messages.error(self.request, '비밀번호 또는 아이디가 틀렸습니다.')
+        return response
 
 
 class MyLoginView(LoginView):

@@ -57,12 +57,22 @@
                                         </div>
                                         <button type="submit" class="btn btn-primary btn-user btn-block">
                                             로그인
+                                            {% if user.is_authenticated %}
+                                        {% else %}
+                                            {% for message in messages %}
+                                            <div class="alert alert-{{ message.tags }}">
+                                                {{ message }}
+                                            </div>
+                                            {% endfor %}
+                                        {% endif %}
                                         </button>
+                                        
                                     </form>
+                                    
                                     
                                     <hr>
                                     <div class="text-center">
-                                        <a class="small" href="forgot-password.html">아이디찾기?</a>
+                                        <a class="small" href="forgot-password.html">아이디찾기</a>
                                     </div>
                                     <div class="text-center">
                                         <a class="small" href="register.html">회원가입하기</a>

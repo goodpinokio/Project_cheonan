@@ -7,4 +7,6 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('main/',include('main.urls')),
     path('',include('login.urls')),
+    path('table/',include('table.urls')),
+    path('enroll/',include('enroll.urls')),
 ]

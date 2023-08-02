@@ -5,4 +5,5 @@ from .views import MyLoginView, MainView
 urlpatterns = [
     path('', MyLoginView.as_view(), name='login'),
     path('main/', MainView.as_view(), name='main'),
+    path('table/',MainView.as_view()),
 ]
