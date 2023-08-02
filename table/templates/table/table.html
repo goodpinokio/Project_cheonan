@@ -50,46 +50,40 @@
                 <div class="container-fluid">
 
                     <!-- Page Heading -->
-                    <h1 class="h3 mb-2 text-gray-800">?? 직무 지원자 테이블</h1>
-                    
+
+                    <h1 class="h3 mb-2 text-gray-800" id="job_title">?? 직무 지원자 테이블</h1>
+
 
                     <!-- DataTales Example -->
                     <div class="card shadow mb-4">
                         <div class="card-header py-3">
                             <h6 class="m-0 font-weight-bold text-primary">DataTables Example</h6>
+                            <!-- somewhere in your form or where you want to put the select -->
+                            <select id="job_suitability_select">
+                                {% for suitability in job_suitabilitys %}
+                                <option value="{{ suitability.id }}" data-jobname="{{ suitability.job_name }}">{{ suitability.job_name }}</option>
+                                {% endfor %}
+                            </select>
+                            
+
                         </div>
                         <div class="card-body">
                             <div class="table-responsive">
                                 <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
                                     <thead>
                                         <tr>
+                                            <th>Num</th>
                                             <th>Name</th>
-                                            <th>Position</th>
-                                            <th>Office</th>
+                                            <th>Email</th>
                                             <th>Age</th>
-                                            <th>Start date</th>
-                                            <th>Salary</th>
+                                            
                                         </tr>
                                     </thead>
-                                    <tfoot>
-                                        <tr>
-                                            <th>Name</th>
-                                            <th>Position</th>
-                                            <th>Office</th>
-                                            <th>Age</th>
-                                            <th>Start date</th>
-                                            <th>Salary</th>
-                                        </tr>
-                                    </tfoot>
+                                  
                                     <tbody>
                                         
                                         <tr>
-                                            <td>Donna Snider</td>
-                                            <td>Customer Support</td>
-                                            <td>New York</td>
-                                            <td>27</td>
-                                            <td>2011/01/25</td>
-                                            <td>$112,000</td>
+                                     
                                         </tr>
                                     </tbody>
                                 </table>
@@ -137,6 +131,32 @@
     <!-- Page level custom scripts -->
     <script src="js/demo/datatables-demo.js"></script>
 
+   <script>
+    $(document).ready(function() {
+        var allJobs = JSON.parse('{{ jobs|escapejs }}');
+
+        $("#job_suitability_select").change(function() {
+            var selected_suitability = $(this).children("option:selected");
+            var job_name = selected_suitability.data('jobname');
+            $("#job_title").text(job_name + ' 직무 지원자 테이블');
+
+            var suitability_id = selected_suitability.val();
+            var suitableJobs = allJobs.filter(function(job) {
+                return job.fields.job_name === job_name;
+            });
+
+            var table_body = $("#dataTable tbody");
+            table_body.empty();
+            suitableJobs.forEach(function(job) {
+                var row = "<tr><td>" + job.fields.No + "</td><td>" + job.fields.name + "</td><td>" + job.fields.email + "</td><td>" + job.fields.Age + "</td></tr>";
+                table_body.append(row);
+            });
+        });
+    });
+</script>
+
+        
+        
 </body>
 
 </html>
