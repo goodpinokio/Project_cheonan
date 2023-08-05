@@ -49,7 +49,12 @@
 
                     <!-- Page Heading -->
                     <div class="d-sm-flex align-items-center justify-content-between mb-4">
-                        <h1 class="h3 mb-0 text-gray-800">Dashboard</h1>
+                        <h1 class="h3 mb-0 text-gray-800" id="job_title">?? 직무 지원자 분석</h1>
+                        <select id="job_suitability_select">
+                            {% for suitability in job_suitabilitys %}
+                            <option value="{{ suitability.id }}" data-jobname="{{ suitability.job_name }}">{{ suitability.job_name }}</option>
+                            {% endfor %}
+                        </select>
                         <a href="#" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm"><i
                                 class="fas fa-download fa-sm text-white-50"></i> Generate Report</a>
                     </div>
@@ -61,14 +66,6 @@
 
                     <div class="row">
 
-                        <!-- Area Chart -->
-                        {% include 'main/area_chart.html' %}
-
-                        <!-- Pie Chart -->
-                        {% include 'main/pie_chart.html' %}
-                    <!-- Content Row -->
-                    <div class="row">
-
                         <!-- Content Column -->
                         <div class="col-lg-6 mb-4">
 
@@ -78,24 +75,23 @@
                             
                         </div>
 
+                        <!-- Content Column -->
                         <div class="col-lg-6 mb-4">
 
-                            <!-- Approach -->
-                            <div class="card shadow mb-4">
-                                <div class="card-header py-3">
-                                    <h6 class="m-0 font-weight-bold text-primary">Development Approach</h6>
-                                </div>
-                                <div class="card-body">
-                                    <p>SB Admin 2 makes extensive use of Bootstrap 4 utility classes in order to reduce
-                                        CSS bloat and poor page performance. Custom CSS classes are used to create
-                                        custom components and custom utility classes.</p>
-                                    <p class="mb-0">Before working with this theme, you should become familiar with the
-                                        Bootstrap framework, especially the utility classes.</p>
-                                </div>
-                            </div>
+                            <!-- Project Card Example -->
+                            {% include 'main/age_chart.html' %}
+
+                            
+                        </div>
+
+                        
+
+                        <div class="col-xl-12 col-lg-7">
+
+                            {% include 'main/dashboard_table.html' %}
 
                         </div>
-                    </div>
+                    
 
                 </div>
                 <!-- /.container-fluid -->
@@ -118,24 +114,136 @@
         <i class="fas fa-angle-up"></i>
     </a>
 
+    <!-- <script>
+       $(document).ready(function() {
+            var allJobs = JSON.parse('{{ jobs|escapejs }}');
 
-    <!-- Bootstrap core JavaScript-->
-    <script src="vendor/jquery/jquery.min.js"></script>
-    <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+            // $("#job_suitability_select").change(function() {
+            //     var selected_suitability = $(this).children("option:selected");
+            //     var job_name = selected_suitability.data('jobname');
+            //     $("#job_title").text(job_name + ' 직무 지원자 테이블');
 
-    <!-- Core plugin JavaScript-->
-    <script src="vendor/jquery-easing/jquery.easing.min.js"></script>
+            //     var suitability_id = selected_suitability.val();
+            //     var suitableJobs = allJobs.filter(function(job) {
+            //         return job.fields.job_name === job_name;
+            //     });
 
-    <!-- Custom scripts for all pages-->
-    <script src="js/sb-admin-2.min.js"></script>
+            //     var table_body = $("#dataTable tbody");
+            //     table_body.empty();
+            //     suitableJobs.forEach(function(job) {
+            //         var row = "<tr><td>" + job.fields.No + "</td><td>" + job.fields.name + "</td><td>" + job.fields.email + "</td><td>" + job.fields.Age + "</td></tr>";
+            //         table_body.append(row);
+            //     });
 
-    <!-- Page level plugins -->
-    <script src="vendor/chart.js/Chart.min.js"></script>
+            //     // AJAX 요청
+            //     $.ajax({
+            //         url: '/main/get_jobs/',  // 요청을 보낼 URL
+            //         type: 'GET',
+            //         data: {
+            //             'job_name': job_name
+            //         },
+            //         dataType: 'json',
+            //         success: function (data) {
+            //             // 서버로부터 응답받았을 때 실행될 코드
+            //             // 직무 지원자의 수, 적합도%, 적합도% 이상 사람의 수 정보를 채워 넣는다.
+            //             $('.text-primary.text-uppercase.mb-1').text('Total ' + job_name + ' 직무 지원자의 수');
+            //             $('.font-weight-bold.text-gray-800').eq(0).text(data.count + '명');  // 직무 지원자 수
+            //             $('.text-info.text-uppercase.mb-1').text(job_name + ' 직무 적합도');
+            //             $('.font-weight-bold.text-gray-800').eq(1).text(data.suitability + '%');  // 적합도%
+            //             $('.progress-bar').css('width', data.suitability + '%').attr('aria-valuenow', data.suitability);  // 적합도% 바
+            //             $('.text-success.text-uppercase.mb-1').text('적합도 ' + data.suitability + '% 이상 사람의 수');
+            //             $('.font-weight-bold.text-gray-800').eq(2).text(data.suitable_count + '명');  // 적합도% 이상 사람의 수
 
-    <!-- Page level custom scripts -->
-    <script src="js/demo/chart-area-demo.js"></script>
-    <script src="js/demo/chart-pie-demo.js"></script>
+            //         }
+            //     });
+            // });
+            $("#job_suitability_select").change(function() {
+                var selected_suitability = $(this).children("option:selected");
 
-</body>
+       
+                var job_name = selected_suitability.data('jobname');
+                $("#job_title").text(job_name + ' 직무 지원자 테이블');
+
+                var suitability_id = selected_suitability.val();
+                var suitableJobs = allJobs.filter(function(job) {
+                    return job.fields.job_name === job_name;
+                });
+
+                // AJAX 요청
+                $.ajax({
+                    url: '/main/get_jobs/',  // 요청을 보낼 URL
+                    type: 'GET',
+                    data: {
+                        'job_name': job_name
+                    },
+                    dataType: 'json',
+                    success: function (data) {
+                        // 서버로부터 응답받았을 때 실행될 코드
+                        // 직무 지원자의 수, 적합도%, 적합도% 이상 사람의 수 정보를 채워 넣는다.
+                        $('.text-primary.text-uppercase.mb-1').text('Total ' + job_name + ' 직무 지원자의 수');
+                        $('.font-weight-bold.text-gray-800').eq(0).text(data.count + '명');  // 직무 지원자 수
+                        $('.text-info.text-uppercase.mb-1').text(job_name + ' 직무 적합도');
+                        $('.font-weight-bold.text-gray-800').eq(1).text(data.suitability + '%');  // 적합도%
+                        $('.progress-bar').css('width', data.suitability + '%').attr('aria-valuenow', data.suitability);  // 적합도% 바
+                        $('.text-success.text-uppercase.mb-1').text('적합도 ' + data.suitability + '% 이상 사람의 수');
+                        $('.font-weight-bold.text-gray-800').eq(2).text(data.suitable_count + '명');  // 적합도% 이상 사람의 수
+                        // $("#job_suitability_select").change();  // Fire the change event manually
+
+                    }
+                });
+            });         
+        });
+
+        </script> -->
+
+        <script>
+            $(document).ready(function() {
+                var allJobs = JSON.parse('{{ jobs|escapejs }}');
+            
+                $("#job_suitability_select").change(function() {
+                    var selected_suitability = $(this).children("option:selected");
+            
+                    var job_name = selected_suitability.data('jobname');
+                    $("#job_title").text(job_name + ' 직무 지원자 테이블');
+            
+                    var suitability_id = selected_suitability.val();
+                    var suitableJobs = allJobs.filter(function(job) {
+                        return job.fields.job_name === job_name;
+                    });
+            
+                    var table_body = $("#dataTable tbody");
+                    table_body.empty();
+                    suitableJobs.forEach(function(job) {
+                        var score = job.fields.suitability_score.toFixed(2);
+
+                        var row = "<tr><td>" + job.fields.No + "</td><td>" + job.fields.name + "</td><td>" + job.fields.email + "</td><td>" + job.fields.Age + "</td><td>" + score + "%</td></tr>";
+                        table_body.append(row);
+                    });
+            
+                    // AJAX 요청
+                    $.ajax({
+                        url: '/main/get_jobs/',  // 요청을 보낼 URL
+                        type: 'GET',
+                        data: {
+                            'job_name': job_name
+                        },
+                        dataType: 'json',
+                        success: function (data) {
+                            // 서버로부터 응답받았을 때 실행될 코드
+                            // 직무 지원자의 수, 적합도%, 적합도% 이상 사람의 수 정보를 채워 넣는다.
+                            $('.text-primary.text-uppercase.mb-1').text('Total ' + job_name + ' 직무 지원자의 수');
+                            $('.font-weight-bold.text-gray-800').eq(0).text(data.count + '명');  // 직무 지원자 수
+                            $('.text-info.text-uppercase.mb-1').text(job_name + ' 직무 적합도');
+                            $('.font-weight-bold.text-gray-800').eq(1).text(data.suitability + '%');  // 적합도%
+                            $('.progress-bar').css('width', data.suitability + '%').attr('aria-valuenow', data.suitability);  // 적합도% 바
+                            $('.text-success.text-uppercase.mb-1').text('적합도 ' + data.suitability + '% 이상 사람의 수');
+                            $('.font-weight-bold.text-gray-800').eq(2).text(data.suitable_count + '명');  // 적합도% 이상 사람의 수
+                        }
+                    });
+                });
+            });
+            </script>
+            
+    </body>
 
 </html>

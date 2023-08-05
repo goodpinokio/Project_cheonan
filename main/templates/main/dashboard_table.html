@@ -1,0 +1,27 @@
+<div class="card-body">
+    <div class="table-responsive">
+        <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+            <thead>
+                <tr>
+                    <th>번호</th>
+                    <th>이름</th>
+                    <th>이메일</th>
+                    <th>나이</th>
+                    <th>정확도</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                {% for job in suitability.job_name %}
+                <tr>
+                    <td>{{ job.No }}</td>
+                    <td>{{ job.name }}</td>
+                    <td>{{ job.email }}</td>
+                    <td>{{ job.Age }}</td>
+                    <td>{{ job.suitability_score }}</td> 
+                </tr> 
+                {% endfor %}
+                
+        </table>
+    </div>
+</div>
