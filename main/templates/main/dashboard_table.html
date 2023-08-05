@@ -7,21 +7,14 @@
                     <th>이름</th>
                     <th>이메일</th>
                     <th>나이</th>
-                    <th>정확도</th>
+                    <th>적합도</th>
                 </tr>
             </thead>
-            <tbody>
-                
-                {% for job in suitability.job_name %}
-                <tr>
-                    <td>{{ job.No }}</td>
-                    <td>{{ job.name }}</td>
-                    <td>{{ job.email }}</td>
-                    <td>{{ job.Age }}</td>
-                    <td>{{ job.suitability_score }}</td> 
-                </tr> 
-                {% endfor %}
-                
+            <tbody id="table_body">
+                <!-- Data will be populated with JavaScript -->
+            </tbody>
         </table>
+        <button id="prev">Previous</button>
+        <button id="next">Next</button>
     </div>
 </div>

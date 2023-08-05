@@ -49,7 +49,7 @@
 
                     <!-- Page Heading -->
                     <div class="d-sm-flex align-items-center justify-content-between mb-4">
-                        <h1 class="h3 mb-0 text-gray-800" id="job_title">?? 직무 지원자 분석</h1>
+                        <h1 class="h3 mb-0 text-gray-800" id="job_title"> 직무 지원자 분석</h1>
                         <select id="job_suitability_select">
                             {% for suitability in job_suitabilitys %}
                             <option value="{{ suitability.id }}" data-jobname="{{ suitability.job_name }}">{{ suitability.job_name }}</option>
@@ -199,27 +199,56 @@
         <script>
             $(document).ready(function() {
                 var allJobs = JSON.parse('{{ jobs|escapejs }}');
-            
-                $("#job_suitability_select").change(function() {
-                    var selected_suitability = $(this).children("option:selected");
-            
-                    var job_name = selected_suitability.data('jobname');
-                    $("#job_title").text(job_name + ' 직무 지원자 테이블');
-            
-                    var suitability_id = selected_suitability.val();
-                    var suitableJobs = allJobs.filter(function(job) {
-                        return job.fields.job_name === job_name;
-                    });
-            
-                    var table_body = $("#dataTable tbody");
-                    table_body.empty();
-                    suitableJobs.forEach(function(job) {
-                        var score = job.fields.suitability_score.toFixed(2);
+    var currentPage = 1;
+    var itemsPerPage = 10;
+    var suitableJobs = allJobs;
 
-                        var row = "<tr><td>" + job.fields.No + "</td><td>" + job.fields.name + "</td><td>" + job.fields.email + "</td><td>" + job.fields.Age + "</td><td>" + score + "%</td></tr>";
-                        table_body.append(row);
-                    });
-            
+    function renderTable() {
+        var start = (currentPage - 1) * itemsPerPage;
+        var end = start + itemsPerPage;
+        var pageJobs = suitableJobs.slice(start, end);
+
+        var table_body = $("#table_body");
+        table_body.empty();
+        pageJobs.forEach(function(job) {
+            var score = job.fields.suitability_score.toFixed(2);
+
+            var row = "<tr><td>" + job.fields.No + "</td><td>" + job.fields.name + "</td><td>" + job.fields.email + "</td><td>" + job.fields.Age + "</td><td>" + score + "%</td></tr>";
+            table_body.append(row);
+        });
+    }
+
+    function checkButtons() {
+        $('#prev').prop('disabled', currentPage === 1);
+        $('#next').prop('disabled', currentPage === Math.ceil(suitableJobs.length / itemsPerPage));
+    }
+
+    $("#prev").click(function() {
+        currentPage--;
+        renderTable();
+        checkButtons();
+    });
+
+    $("#next").click(function() {
+        currentPage++;
+        renderTable();
+        checkButtons();
+    });
+
+    $("#job_suitability_select").change(function() {
+        var selected_suitability = $(this).children("option:selected");
+
+        var job_name = selected_suitability.data('jobname');
+        $("#job_title").text(job_name + ' 직무 지원자 테이블');
+
+        suitableJobs = allJobs.filter(function(job) {
+            return job.fields.job_name === job_name;
+        });
+
+        currentPage = 1;  // Reset page number
+        renderTable();
+        checkButtons();
+
                     // AJAX 요청
                     $.ajax({
                         url: '/main/get_jobs/',  // 요청을 보낼 URL
@@ -233,13 +262,15 @@
                             // 직무 지원자의 수, 적합도%, 적합도% 이상 사람의 수 정보를 채워 넣는다.
                             $('.text-primary.text-uppercase.mb-1').text('Total ' + job_name + ' 직무 지원자의 수');
                             $('.font-weight-bold.text-gray-800').eq(0).text(data.count + '명');  // 직무 지원자 수
-                            $('.text-info.text-uppercase.mb-1').text(job_name + ' 직무 적합도');
+                            $('.text-info.text-uppercase.mb-1').text(job_name + ' 직무 적합도 % 이상');
                             $('.font-weight-bold.text-gray-800').eq(1).text(data.suitability + '%');  // 적합도%
                             $('.progress-bar').css('width', data.suitability + '%').attr('aria-valuenow', data.suitability);  // 적합도% 바
                             $('.text-success.text-uppercase.mb-1').text('적합도 ' + data.suitability + '% 이상 사람의 수');
                             $('.font-weight-bold.text-gray-800').eq(2).text(data.suitable_count + '명');  // 적합도% 이상 사람의 수
                         }
                     });
+                    renderTable();
+                    checkButtons();
                 });
             });
             </script>

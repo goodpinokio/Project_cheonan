@@ -3,6 +3,8 @@ from django.contrib.auth.decorators import login_required
 from enroll.models import Job, JobSuitability 
 from django.core import serializers
 from django.http import JsonResponse
+from django.core.paginator import Paginator
+
 
 # @login_required
 # def main_view(request):
@@ -46,6 +48,15 @@ def main_view(request):
         {'job_suitabilitys': job_suitabilitys, 'jobs': jobs_json}
     )
 
+def dashboard(request):
+    jobs_list = Job.objects.all()
+    paginator = Paginator(jobs_list, 10)  # Show 10 jobs per page.
+
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    return render(request, 'dashboard_table.html', {'page_obj': page_obj})
+
+
 def get_jobs_by_job_name(request):
     job_name = request.GET.get('job_name', None)
     if job_name is None:
@@ -79,16 +90,3 @@ def get_jobs(request):
     }
     return JsonResponse(response_data, safe=False)
 
-
-def job_list(request):
-    selected_job_name = request.GET.get('selected_job', None)  # 셀렉트 박스에서 선택된 직무 이름 가져오기
-    if selected_job_name:
-        try:
-            suitability_threshold = JobSuitability.objects.get(job_name=selected_job_name).suitability
-        except JobSuitability.DoesNotExist:
-            return JsonResponse({'error': 'JobSuitability for this job_name does not exist.'}, status=404)
-
-        jobs = Job.objects.filter(name=selected_job_name, Suitability__gte=suitability_threshold).order_by('-Suitability')
-    else:
-        jobs = Job.objects.all().order_by('-Suitability')  # 기본적으로 모든 작업을 정확도에 따라 내림차순으로 정렬
-    return render(request, 'main/base_full_width.html', {'jobs': jobs})
