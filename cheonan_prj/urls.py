@@ -9,4 +9,5 @@ urlpatterns = [
     path('',include('login.urls')),
     path('table/',include('table.urls')),
     path('enroll/',include('enroll.urls')),
+    path('edit/',include('edit.urls')),
 ]

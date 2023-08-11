@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     'login',
     'table',
     'enroll',
+    'edit',
 ]
 
 MIDDLEWARE = [

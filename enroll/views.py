@@ -38,7 +38,7 @@ def enroll_view(request):
                                           score2_p=score2_p, score2_m=score2_m, 
                                           score3_p=score3_p, score3_m=score3_m)
                 job_suit.save()
-                
+
                 for index, row in data.iterrows():
                     job = Job()
                     job.No = row['No']
@@ -86,8 +86,8 @@ def enroll_view(request):
                     job.save()
 
                     # Store job suitability
-                job_suit = JobSuitability(job_name=job_name, suitability=suitability, factor='your_factor', score=0)
-                job_suit.save()
+                # job_suit = JobSuitability(job_name=job_name, suitability=suitability, factor='your_factor', score=0)
+                # job_suit.save()
 
             except Exception as e:
                 messages.error(request, 'There was a problem processing your file: {}'.format(e))

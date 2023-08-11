@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <title>등록하기</title>
+    <link href="{% static '/main/bootstrap/sb-admin-2.min.css' %}" rel="stylesheet" type="text/css">
+    <script src="https://kit.fontawesome.com/89a12d4a7e.js" crossorigin="anonymous"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+</head>
+<body id="page-top">
+    <div id="wrapper">
+        {% include 'main/navbar_side.html' %}
+        <div id="content-wrapper" class="d-flex flex-column">
+            <div id="content">
+                {% include 'main/navbar_top.html' %}
+                <div class="container-fluid">
+                    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+                        <h1 class="h3 mb-0 text-gray-800">직무 및 지원자 등록하기</h1>
+                    </div>
+                
+
+                    <form method="POST" enctype="multipart/form-data">
+                        <p>수정할 직무 선택하기: 
+                            
+                            <select id="job_suitability_select">
+                                <option value="">-- 직무 선택 --</option>
+                                {% for job in jobs %}
+                                <option value="{{ job.id }}" data-jobname="{{ job.job_name }}">{{ job.job_name }}</option>
+                                {% endfor %}
+                            </select>
+                        </p>
+                        {% csrf_token %}
+                        <p>{{ form.job_name.label }}: {{ form.job_name }}</p>
+                        <p>{{ form.suitability.label }}: {{ form.suitability }}</p>
+                        <p>{{ form.excel_file.label }}: {{ form.excel_file }}</p>
+               
+                        <!-- Hidden form fields for storing factor scores. -->
+                        <input type="hidden" name="score1_p" value="">
+                        <input type="hidden" name="score1_m" value="">
+                        <input type="hidden" name="score2_p" value="">
+                        <input type="hidden" name="score2_m" value="">
+                        <input type="hidden" name="score3_p" value="">
+                        <input type="hidden" name="score3_m" value="">
+                        <input type="hidden" name="selected_job_id" id="selected_job_id">
+
+                        <table id="factors-table">
+                            <tr>
+                                <th></th>
+                                <th> 1 점</th>
+                                <th> 2 점</th>
+                                <th> 3 점</th>
+                            </tr>
+                            <!-- 자바스크립트 롤 들어옴 -->
+                        </table>
+                  
+                        <button type="submit">제출하기</button>
+                    </form>
+
+                    {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} mt-3">
+                        {{ message }}
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% include 'main/footer.html' %}
+        </div>
+    </div>
+
+
+    <script>
+        const factors = ['걱정', '분노', '위축', '열등', '충동', '심약', '온정', '사교', '주장', '활력', '열정', '낙천', '상상', '심미', '감정', '시도', '독창', '가치', '신뢰', '솔직', '이타', '순응', '겸양', '온유', '자신', '질서', '소명', '성취', '자율', '숙고'];  
+        const table = document.getElementById('factors-table');
+        
+        factors.forEach((factor) => {
+            const row = document.createElement('tr');
+            
+            const factorCell = document.createElement('td');
+            factorCell.textContent = factor;
+            row.appendChild(factorCell);
+            
+            const selects = [];
+        
+            for (let i = 1; i <= 3; i++) {
+                const cell = document.createElement('td');
+                const select = document.createElement('select');
+                select.innerHTML = `
+                <option value=""></option>
+                <option value="+">${i} (+)</option>
+                <option value="-">${i} (-)</option>
+                `;
+                cell.appendChild(select);
+                row.appendChild(cell);
+        
+                selects.push(select);
+            }
+        
+            selects.forEach((select, index) => {
+                select.addEventListener('change', function () {
+                    const disabled = this.value !== '';
+
+                    if (this.value.includes('+')) {
+                        const score_p = `${factor}`;
+                        const current_score_p = document.querySelector(`input[name="score${index + 1}_p"]`).value;
+                        document.querySelector(`input[name="score${index + 1}_p"]`).value = current_score_p ? `${current_score_p}, ${score_p}` : score_p;
+                    }
+                    else if (this.value.includes('-')) {
+                        const score_m = `${factor}`;
+                        const current_score_m = document.querySelector(`input[name="score${index + 1}_m"]`).value;
+                        document.querySelector(`input[name="score${index + 1}_m"]`).value = current_score_m ? `${current_score_m}, ${score_m}` : score_m;
+                    }
+
+                    selects.forEach((otherSelect, otherIndex) => {
+                        if (otherIndex !== index) {
+                            otherSelect.disabled = disabled;
+                        }
+                    });
+                });
+            });
+        
+            table.appendChild(row);
+
+            $("#job_suitability_select").change(function(){
+                var selectedJob = $(this).children("option:selected");
+                var job_name = selectedJob.data('jobname');
+                
+                //값 넘기기 select 에서 선택된 job name
+                var selectedJobId = $(this).val();
+                $("#selected_job_id").val(selectedJobId);
+
+                if (selectedJob) {
+                    $.ajax({
+                        url: '/edit/get_job_edit/',  // 주의: 요청 URL이 올바른지 확인하세요!
+                        type: 'GET', // 명시적으로 GET 메서드를 사용
+                        data: {
+                            'job_name': job_name
+                        },
+                        dataType: 'json',
+                        success: function(data) {
+                            // Form 필드 업데이트
+                            $("input[name='job_name']").val(data.job_name);
+                            $("input[name='suitability']").val(data.suitability);
+
+                        },
+                        error: function(error) {
+                            console.error("Error fetching data: ", error);
+                        }
+                    });
+                }
+            });
+        });
+
+    </script>
+        
+</body>
+</html>
