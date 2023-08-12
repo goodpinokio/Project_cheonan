@@ -62,27 +62,28 @@
                     <!-- Content Row -->
                     {% include 'main/content_row.html' %}
 
+                    {% include 'main/age_chart.html' %}
                     <!-- Content Row -->
 
                     <div class="row">
 
-                        <!-- Content Column -->
-                        <div class="col-lg-6 mb-4">
+                       
+                        <!-- <div class="col-lg-6 mb-4">
 
-                            <!-- Project Card Example -->
+                           Project Card Example 
                             {% include 'main/big5_chart.html' %}
 
                             
-                        </div>
+                        </div> -->
 
-                        <!-- Content Column -->
+                        <!-- Content Column 
                         <div class="col-lg-6 mb-4">
 
-                            <!-- Project Card Example -->
+                            
                             {% include 'main/age_chart.html' %}
 
                             
-                        </div>
+                        </div>-->
 
                         
 
@@ -180,9 +181,9 @@
                                 // Update the suitability variable with the received suitability data
                                 suitability = data.suitability;
 
-                                $('.text-primary.text-uppercase.mb-1').text('Total ' + job_name + ' 직무 지원자의 수');
+                                $('.text-primary.text-uppercase.mb-1').text(job_name + ' 지원자의 수');
                                 $('.font-weight-bold.text-gray-800').eq(0).text(data.count + '명');
-                                $('.text-info.text-uppercase.mb-1').text(job_name + ' 직무 적합도 % 이상');
+                                $('.text-info.text-uppercase.mb-1').text(job_name + ' 직무 적합도 '+ suitability +'% 이상');
                                 $('.font-weight-bold.text-gray-800').eq(1).text(suitability + '%');
                                 $('.progress-bar').css('width', suitability + '%').attr('aria-valuenow', suitability);
                                 $('.text-success.text-uppercase.mb-1').text('적합도 ' + suitability + '% 이상 사람의 수');

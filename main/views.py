@@ -41,17 +41,6 @@ def dashboard(request):
     return render(request, 'dashboard_table.html', {'page_obj': page_obj})
 
 
-def get_jobs_by_job_name(request):
-    job_name = request.GET.get('job_name', None)
-    if job_name is None:
-        return JsonResponse({'error': 'No job_name provided.'}, status=400)
-
-    jobs = Job.objects.filter(job_name=job_name)
-    jobs = [Job.objects.get(id=job.id) for job in jobs]
-    jobs_json = serializers.serialize('json', jobs)
-    return JsonResponse({'jobs': jobs_json}, safe=False)
-
-
 def get_jobs(request):
     job_name = request.GET.get('job_name', None)
     jobs = Job.objects.filter(job_name=job_name)
@@ -67,15 +56,31 @@ def get_jobs(request):
         if job.calculate_suitability_score() >= suitability:
             suitable_count += 1
 
-    # Calculate age distribution
-    age_ranges = [(10, 19), (20, 29), (30, 39), (40, 49), (50, 59)]
-    age_counts = {f"{start}-{end}": jobs.filter(Age__gte=start, Age__lte=end).count() for start, end in age_ranges}
+    # 나이대 계산
+    age_distribution = {
+        "10대": 0,
+        "20대": 0,
+        "30대": 0,
+        "40대": 0,
+        "50대": 0,
+    }
 
-    # Calculate total
-    total = sum(age_counts.values())
+    for job in jobs:
+        age = job.Age
+        if 10 <= age < 20:
+            age_distribution["10대"] += 1
+        elif 20 <= age < 30:
+            age_distribution["20대"] += 1
+        elif 30 <= age < 40:
+            age_distribution["30대"] += 1
+        elif 40 <= age < 50:
+            age_distribution["40대"] += 1
+        elif age >= 50:
+            age_distribution["50대"] += 1
 
-    # Convert counts to percentages
-    age_distribution = {age_range: (count / total) * 100 for age_range, count in age_counts.items()}
+    total_jobs = len(jobs)
+    for key, value in age_distribution.items():
+        age_distribution[key] = (value / total_jobs)
 
     response_data = {
         'count': count,
