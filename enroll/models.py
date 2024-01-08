@@ -105,24 +105,30 @@ class Job(models.Model):
     suitability_score = models.FloatField(default=0.0)
     job_name = models.CharField(max_length=255, null=True)
 
+   # 수정된 calculate_suitability_score 메서드
     def calculate_suitability_score(self):
-    
         job_suitability = JobSuitability.objects.get(job_name=self.job_name)
+        
+        positive_fields = [job_suitability.score1_p, job_suitability.score2_p, job_suitability.score3_p]
+        negative_fields = [job_suitability.score1_m, job_suitability.score2_m, job_suitability.score3_m]
+        positive_weights = [1, 2, 3]  # score1_p, score2_p, score3_p에 대한 가중치
+        negative_weights = [1, 2, 3]  # score1_m, score2_m, score3_m에 대한 가중치
+        
+        def calculate_scores(score_fields, factor_weights, positive=True):
+            total = 0
+            for field, weight in zip(score_fields, factor_weights):
+                if field:
+                    keywords = field.split(',')
+                    for keyword in keywords:
+                        total += calculate_score(getattr(self, factor_mapping[keyword.strip()]), weight, positive)
+            return total
 
-        positive_scores = [
-            calculate_score(getattr(self, factor_mapping[job_suitability.score1_p]), 1, positive=True) if job_suitability.score1_p else 0,
-            calculate_score(getattr(self, factor_mapping[job_suitability.score2_p]), 2, positive=True) if job_suitability.score2_p else 0,
-            calculate_score(getattr(self, factor_mapping[job_suitability.score3_p]), 3, positive=True) if job_suitability.score3_p else 0,
-        ]
-        negative_scores = [
-            calculate_score(getattr(self, factor_mapping[job_suitability.score1_m]), 1, positive=False) if job_suitability.score1_m else 0,
-            calculate_score(getattr(self, factor_mapping[job_suitability.score2_m]), 2, positive=False) if job_suitability.score2_m else 0,
-            calculate_score(getattr(self, factor_mapping[job_suitability.score3_m]), 3, positive=False) if job_suitability.score3_m else 0,
-        ]
-        total_score = sum(positive_scores) + sum(negative_scores)
+        positive_scores = calculate_scores(positive_fields, positive_weights, True)
+        negative_scores = calculate_scores(negative_fields, negative_weights, False)
+
+        total_score = positive_scores + negative_scores
         score = (total_score / 33) * 100
         return score
-       
  
     def __str__(self):
         return f'{self.job_name}_{self.name}_{self.No}'

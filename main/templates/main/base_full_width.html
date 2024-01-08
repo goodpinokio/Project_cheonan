@@ -67,23 +67,7 @@
 
                     <div class="row">
 
-                       
-                        <!-- <div class="col-lg-6 mb-4">
-
-                           Project Card Example 
-                            {% include 'main/big5_chart.html' %}
-
-                            
-                        </div> -->
-
-                        <!-- Content Column 
-                        <div class="col-lg-6 mb-4">
-
-                            
-                            {% include 'main/age_chart.html' %}
-
-                            
-                        </div>-->
+             
 
                         
 
@@ -165,7 +149,7 @@
                             return job.fields.job_name === job_name;
                         });
 
-                        currentPage = 1;  // Reset page number
+                        currentPage = 1; 
                         renderTable();
                         checkButtons();
 
@@ -178,7 +162,6 @@
                             },
                             dataType: 'json',
                             success: function (data) {
-                                // Update the suitability variable with the received suitability data
                                 suitability = data.suitability;
 
                                 $('.text-primary.text-uppercase.mb-1').text(job_name + ' 지원자의 수');

@@ -5,7 +5,8 @@ import pandas as pd
 from django.contrib import messages
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
-import json
+
+
 
 def enroll_view(request):
     form = JobForm()
@@ -97,4 +98,7 @@ def enroll_view(request):
 
     # if it's a GET request, just render the form
     context = {'form': form}
-    return render(request, 'enroll/enroll.html', context)
+    return render(
+        request,
+        'enroll/enroll.html',
+          context)
