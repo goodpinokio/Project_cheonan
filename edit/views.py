@@ -16,7 +16,12 @@ def get_job_edit(request):
         data = {
             'job_name': job_suit.job_name,
             'suitability': job_suit.suitability,
-            # 필요한 다른 필드들도 여기에 추가하세요.
+            'score1_p': job_suit.score1_p,
+            'score1_m': job_suit.score1_m,
+            'score2_p': job_suit.score2_p,
+            'score2_m': job_suit.score2_m,
+            'score3_p': job_suit.score3_p,
+            'score3_m': job_suit.score3_m,
         }
     except JobSuitability.DoesNotExist:
         pass  # 선택된 직무와 일치하는 항목이 없으면 아무것도 하지 않습니다.
@@ -111,6 +116,19 @@ def edit_job_suitability(request):
             messages.error(request, "폼을 올바르게 작성해주세요.")
     else:
         form = JobForm()
+    
+    if request.method == 'GET':
+        jobs = JobSuitability.objects.all()
+        context = {'form': form, 'jobs': jobs}
+
+        # 선택된 직무를 기준으로 JobSuitability 객체를 가져옵니다.
+        selected_job_id = request.GET.get('job_id')
+        if selected_job_id:
+            selected_job = JobSuitability.objects.filter(id=selected_job_id).first()
+            if selected_job:
+                context['selected_job'] = selected_job
+        
+        return render(request, 'edit/edit.html', context)
 
     jobs = JobSuitability.objects.all()
     context = {'form': form, 'jobs': jobs}

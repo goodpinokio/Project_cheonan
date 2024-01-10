@@ -7,7 +7,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <meta name="description" content="">
     <meta name="author" content="">
-    <title>등록하기</title>
+    <title>직무 및 지원자 수정</title>
     <link href="{% static '/main/bootstrap/sb-admin-2.min.css' %}" rel="stylesheet" type="text/css">
     <script src="https://kit.fontawesome.com/89a12d4a7e.js" crossorigin="anonymous"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
@@ -23,11 +23,12 @@
                 {% include 'main/navbar_top.html' %}
                 <div class="container-fluid">
                     <div class="d-sm-flex align-items-center justify-content-between mb-4">
-                        <h1 class="h3 mb-0 text-gray-800">직무 및 지원자 등록하기</h1>
+                        <h1 class="h3 mb-0 text-gray-800">지원자 등록 및 기준 수정</h1>
                     </div>
                 
 
                     <form method="POST" enctype="multipart/form-data">
+                        {% csrf_token %}
                         <p>수정할 직무 선택하기: 
                             
                             <select id="job_suitability_select">
@@ -37,7 +38,7 @@
                                 {% endfor %}
                             </select>
                         </p>
-                        {% csrf_token %}
+
                         <p>{{ form.job_name.label }}: {{ form.job_name }}</p>
                         <p>{{ form.suitability.label }}: {{ form.suitability }}</p>
                         <p>{{ form.excel_file.label }}: {{ form.excel_file }}</p>
@@ -128,36 +129,136 @@
         
             table.appendChild(row);
 
-            $("#job_suitability_select").change(function(){
+            function resetDropdownSelections() {
+                // 모든 드롭다운을 초기화합니다.
+                $('#factors-table tr').each(function() {
+                    $(this).find('select').val('').prop('disabled', false); // 값을 비워주고 disabled 속성을 해제합니다.
+                });
+            }
+
+            function updateHiddenInputs() {
+                // 각 카테고리별로 결합된 점수를 저장하기 위한 객체를 초기화합니다.
+                var combinedScores = {
+                    score1_p: [],
+                    score1_m: [],
+                    score2_p: [],
+                    score2_m: [],
+                    score3_p: [],
+                    score3_m: []
+                };
+
+                // 테이블의 각 행을 반복합니다.
+                $('#factors-table tr').each(function(index, row) {
+                    var factorName = $(row).find('td:first').text();
+                    
+                    // 현재 행의 각 드롭다운을 반복합니다.
+                    $(row).find('select').each(function(selectIndex, selectElement) {
+                        var selectedValue = $(selectElement).val();
+                        var scoreCategory = 'score' + (selectIndex + 1) + (selectedValue.includes('+') ? '_p' : '_m');
+                        
+                        // 값이 선택되었으면 해당 팩터를 적절한 점수 카테고리에 추가합니다.
+                        if (selectedValue) {
+                            combinedScores[scoreCategory].push(factorName);
+                        }
+                    });
+                });
+
+                // 각 카테고리별로 결합된 점수로 숨겨진 입력 값을 업데이트합니다.
+                Object.keys(combinedScores).forEach(function(key) {
+                    $('input[name="' + key + '"]').val(combinedScores[key].join(', '));
+                });
+            }
+
+            var currentAjaxRequest = null;
+
+            $("#job_suitability_select").change(function() {
+                // 이전 AJAX 요청이 있으면 취소합니다.
+                if (currentAjaxRequest) {
+                    currentAjaxRequest.abort();
+                }
+                
+                resetDropdownSelections();  // 드롭다운 초기화를 호출
+
                 var selectedJob = $(this).children("option:selected");
                 var job_name = selectedJob.data('jobname');
-                
-                //값 넘기기 select 에서 선택된 job name
                 var selectedJobId = $(this).val();
                 $("#selected_job_id").val(selectedJobId);
 
-                if (selectedJob) {
-                    $.ajax({
-                        url: '/edit/get_job_edit/',  // 주의: 요청 URL이 올바른지 확인하세요!
-                        type: 'GET', // 명시적으로 GET 메서드를 사용
-                        data: {
-                            'job_name': job_name
-                        },
-                        dataType: 'json',
-                        success: function(data) {
-                            // Form 필드 업데이트
-                            $("input[name='job_name']").val(data.job_name);
-                            $("input[name='suitability']").val(data.suitability);
+                // 새로운 AJAX 요청을 시작합니다.
+                currentAjaxRequest = $.ajax({
+                    url: '/edit/get_job_edit/',
+                    type: 'GET',
+                    data: {
+                        'job_name': job_name
+                    },
+                    dataType: 'json',
+                    success: function(data) {
+                        resetDropdownSelections();  // 응답을 받으면 다시 초기화
+                        $("input[name='job_name']").val(data.job_name);
+                        $("input[name='suitability']").val(data.suitability);
 
-                        },
-                        error: function(error) {
+                        updateScores(data);  // 점수 업데이트 로직
+                        updateHiddenInputs();
+                    },
+                    error: function(error) {
+                        if (error.statusText !== 'abort') {  // 요청이 사용자에 의해 취소되지 않았다면
                             console.error("Error fetching data: ", error);
                         }
-                    });
+                    },
+                    complete: function() {
+                        // 요청이 완료되면 추적 변수를 null로 설정합니다.
+                        currentAjaxRequest = null;
+                    }
+                });
+            });
+        
+            function updateScores(data) {
+                // 드롭다운의 값을 설정하기 위한 함수
+                function setDropdownValue(factor, value, sign) {
+                    var factorRow = $(`tr:contains('${factor}')`);
+                    if (factorRow.length) {
+                        // :contains()는 내용이 일치하는지 확인합니다. 여기서는 value 속성을 직접 설정해야 합니다.
+                        var dropdown = factorRow.find(`select`).eq(value - 1); // 0부터 시작하므로 1을 빼줍니다.
+                        dropdown.val(sign); // 실제 value 값을 설정합니다.
+                    }
                 }
+
+                // 각 점수 배열로 파싱
+                var scores1_p = data.score1_p ? data.score1_p.split(', ') : [];
+                var scores1_m = data.score1_m ? data.score1_m.split(', ') : [];
+                var scores2_p = data.score2_p ? data.score2_p.split(', ') : [];
+                var scores2_m = data.score2_m ? data.score2_m.split(', ') : [];
+                var scores3_p = data.score3_p ? data.score3_p.split(', ') : [];
+                var scores3_m = data.score3_m ? data.score3_m.split(', ') : [];
+
+                // 설정된 점수에 따라 드롭다운의 값을 설정
+                scores1_p.forEach(function(factor) {
+                    setDropdownValue(factor, 1, '+');
+                });
+                scores1_m.forEach(function(factor) {
+                    setDropdownValue(factor, 1, '-');
+                });
+                scores2_p.forEach(function(factor) {
+                    setDropdownValue(factor, 2, '+');
+                });
+                scores2_m.forEach(function(factor) {
+                    setDropdownValue(factor, 2, '-');
+                });
+                scores3_p.forEach(function(factor) {
+                    setDropdownValue(factor, 3, '+');
+                });
+                scores3_m.forEach(function(factor) {
+                    setDropdownValue(factor, 3, '-');
+                });
+            }
+
+            // 폼 제출 전에 updateHiddenInputs()를 호출하여 모든 선택이 포함되도록 합니다.
+            $('form').on('submit', function(e) {
+                e.preventDefault(); // 기본 폼 제출을 방지합니다.
+                updateHiddenInputs();
+                this.submit(); // 폼 제출을 계속합니다.
             });
         });
-
     </script>
         
 </body>
