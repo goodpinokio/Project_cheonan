@@ -9,7 +9,6 @@ from django.db import transaction
 def get_job_edit(request):
     job_name = request.GET.get('job_name')
     print(f"Requested job_name: {job_name}")
-    # `JobSuitability` 모델에서 직무 이름으로 데이터를 조회합니다.
     data = {}
     try:
         job_suit = JobSuitability.objects.get(job_name=job_name)
@@ -24,7 +23,7 @@ def get_job_edit(request):
             'score3_m': job_suit.score3_m,
         }
     except JobSuitability.DoesNotExist:
-        pass  # 선택된 직무와 일치하는 항목이 없으면 아무것도 하지 않습니다.
+        pass 
 
     return JsonResponse(data)
 
@@ -34,18 +33,12 @@ def edit_job_suitability(request):
         form = JobForm(request.POST, request.FILES)
         
         if form.is_valid():
-            # 선택한 직무 이름으로 기존 데이터 삭제
             selected_job_name = form.cleaned_data.get('job_name')
-            
             Job.objects.filter(job_name=selected_job_name).delete()
             JobSuitability.objects.filter(job_name=selected_job_name).delete()
-
-            # 새롭게 제출된 데이터를 기반으로 `JobSuitability` 객체 생성 및 저장
             job_suitability = JobSuitability()
             job_suitability.job_name = form.cleaned_data.get('job_name')
-    
-            # 이미 존재하는 job_suitability 객체의 정보 업데이트
-            suitability_value = float(request.POST.get('suitability', 0.0))  # POST에서 suitability 값을 가져오며, 없으면 0.0으로 기본 설정
+            suitability_value = float(request.POST.get('suitability', 0.0))
             job_suitability.suitability = suitability_value
 
             job_suitability.score1_p = request.POST.get('score1_p')
@@ -57,7 +50,7 @@ def edit_job_suitability(request):
             job_name = form.cleaned_data.get('job_name')
             job_suitability.save()
 
-            # 엑셀 파일에서 데이터를 읽어와서 Job 모델에 저장하는 로직
+            # 엑셀 파일불러오기
             excel_file = request.FILES['excel_file']
             try:
                 data = pd.read_excel(excel_file)
@@ -120,9 +113,8 @@ def edit_job_suitability(request):
     if request.method == 'GET':
         jobs = JobSuitability.objects.all()
         context = {'form': form, 'jobs': jobs}
-
-        # 선택된 직무를 기준으로 JobSuitability 객체를 가져옵니다.
         selected_job_id = request.GET.get('job_id')
+        
         if selected_job_id:
             selected_job = JobSuitability.objects.filter(id=selected_job_id).first()
             if selected_job:
